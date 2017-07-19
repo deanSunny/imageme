@@ -15,6 +15,8 @@ import base64, io, os, re, sys, threading, SimpleHTTPServer, SocketServer
 # Attempt to import PIL - if it doesn't exist we won't be able to make use of
 # some performance enhancing goodness, but imageMe will still work fine
 import argparse
+import pyinotify
+
 
 PIL_ENABLED = False
 try:
@@ -64,9 +66,15 @@ class BackgroundIndexFileGenerator:
 
     def _process(self):
         _create_index_files(self.dir_path)
+        wm = pyinotify.WatchManager()
+        wm.add_watch(os.getcwd(), pyinotify.ALL_EVENTS, rec=True)
+        eh = EventHandler(args_dict)
+        notifier = pyinotify.Notifier(wm, eh)
+        notifier.loop()
 
     def run(self):
         self.thread.start()
+
 
 def _clean_up(paths):
     """
@@ -486,7 +494,9 @@ def serve_dir(args):
     # This time, force no processing - this gives us a fast first-pass in terms
     # of page generation, but potentially slow serving for large image files
     print('Performing first pass index file generation')
+
     created_files = _create_index_files(args, True)
+
     if (PIL_ENABLED):
         # If PIL is enabled, we'd like to process the HTML indexes to include
         # generated thumbnails - this slows down generation so we don't do it
@@ -504,10 +514,28 @@ def serve_dir(args):
     os.chdir(started_path)
     _clean_up(created_files)
 
+
+class EventHandler(pyinotify.ProcessEvent):
+    def __init__(self, args):
+        super(EventHandler, self).__init__()
+        self.args = args
+    def process_IN_CREATE(self, event):
+        _create_index_files(self.args, True)
+        print '{} is created!'.format(event.name)
+
+    def process_IN_DELETE(self, event):
+        if os.path.splitext(event.name)[-1] == '.html':
+            pass
+        else:
+            _create_index_files(self.args, True)
+            print '{} is deleted!'.format(event.name)
+
+
 if __name__ == '__main__':
     # Generate indices and serve from the current directory downwards when run
     # as the entry point
     args = parse_args()
+
 
     args_dict = {}
     args_dict[0] = args.port
@@ -515,3 +543,9 @@ if __name__ == '__main__':
     args_dict[2] = args.dir
     args_dict[3] = os.getcwd()
     serve_dir(args_dict)
+
+
+
+
+
+

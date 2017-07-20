@@ -55,10 +55,11 @@ Your images are at http://127.0.0.1:8000/imageme.html
 You can specify a port, just like you can with `SimpleHTTPServer`:
 
 ```bash
-> imageme.py 5678
-Processing .
-...
-Your images are at http://127.0.0.1:5678/imageme.html
+Port = 
+Num = 
+Dir = 
+>$ python imageme.py -p Port -n Num -d Dir
+
 ```
 
 ## Browse and Enjoy

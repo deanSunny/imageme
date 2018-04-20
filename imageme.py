@@ -15,8 +15,6 @@ import base64, io, os, re, sys, threading, SimpleHTTPServer, SocketServer
 # Attempt to import PIL - if it doesn't exist we won't be able to make use of
 # some performance enhancing goodness, but imageMe will still work fine
 import argparse
-import pyinotify
-
 
 PIL_ENABLED = False
 try:
@@ -66,15 +64,9 @@ class BackgroundIndexFileGenerator:
 
     def _process(self):
         _create_index_files(self.dir_path)
-        wm = pyinotify.WatchManager()
-        wm.add_watch(os.getcwd(), pyinotify.ALL_EVENTS, rec=True)
-        eh = EventHandler(args_dict)
-        notifier = pyinotify.Notifier(wm, eh)
-        notifier.loop()
 
     def run(self):
         self.thread.start()
-
 
 def _clean_up(paths):
     """
@@ -138,8 +130,11 @@ def _create_index_file(
         '        </style>',
         '    </head>',
         '    <body>',
-        '    <div class="content">',
-        '        <h2 class="header">' + header_text + '</h2>'
+        '    <a href="#container" style="position:fixed; bottom:10%; right:2%"><img src="data:image/gif;base64,R0lGODlhIwAtANUAAKOmsNjZ3ri6wqaps/n5+ry+xdDS1sDCybq8xPX29+zt7/39/dTW2qSnseHi5cHEysXHzbK1vebn6t3e4snL0ba4wOjo69vc4LS3v77Ax/Pz9aqttcfJz+rr7airtO7v8aeqs87Q1fP09a2wua6xuu3u8K+yu6Wosv7+/u/w8rG0vOfo6ubn6c/R1cPGzN/g47O2vvDx8vv7/LC0u+Tl6Ovs7s7Q1MzO1M7R1ePk56yvt6mstaqttquut////6yvuCH5BAAAAAAALAAAAAAjAC0AAAb/QJ9wSCwKCcakcmm5wX7QCIW1rBZjB6h2W1BYqzTTdgwlvb5JyYjM/jnQxISqzSal4EIKvf3Aa/Z0NXABdB90IXAQbR+MbQVwCGyNjWQRcAKAbSpwWZlkGHAPnmQIKFYyHKNsD0hKMhmqjq1GLrF0EKZFhLZ0DEUiJLx0I3dDqcJ0fUIia8h0Xj4MbD3U1dbXPW03Qphj1Tzg4eHf1mMRKAlk1OA77e7v7+DUYx8W6kUGMBbLEB4GQiUg7OAxT8uLC9567PDgo8WJEyVKqNBxgYCKFitmvAExMJsWBtK8LWx4ooKPBw97+AgRQgIACj4GeCC4JUTILQoZ4mjwqECD0hMNVtogIMHHBZk0tdzYhZMHwxYNTD5o0GCDDxs2FCCocAKpRygGHKjjsYMkRAUzTlQ00RJAV45JoQQoMbasgQEDBKwQomEqjhVdPXT8+oPFAjE4e5D14AGEYxB4Iw8AIZgg4RFIFCUk646xZ88DLY955COHunXiOLcbR1jLBSELuiXEJq/cJxlDaHi6BmhCkU7OtghY8OtJcCgmYiTpEOw4jSUOmgsb4btKDQzCVOz7kqBWrAci8PjoUMBTgaLih3xgUJ6MAAbQ0idJ8eEFIzxBAAA7"></a>',
+        '    <div class="content", style="overflow:auto", id="container">',
+        '        <div style="position:relative; z-index:99999">',
+        '        <h2 class="header">' + header_text + '</h2>',
+        '        </div>'
     ]
     # Populate the present subdirectories - this includes '..' unless we're at
     # the top level
@@ -494,9 +489,7 @@ def serve_dir(args):
     # This time, force no processing - this gives us a fast first-pass in terms
     # of page generation, but potentially slow serving for large image files
     print('Performing first pass index file generation')
-
     created_files = _create_index_files(args, True)
-
     if (PIL_ENABLED):
         # If PIL is enabled, we'd like to process the HTML indexes to include
         # generated thumbnails - this slows down generation so we don't do it
@@ -514,28 +507,10 @@ def serve_dir(args):
     os.chdir(started_path)
     _clean_up(created_files)
 
-
-class EventHandler(pyinotify.ProcessEvent):
-    def __init__(self, args):
-        super(EventHandler, self).__init__()
-        self.args = args
-    def process_IN_CREATE(self, event):
-        _create_index_files(self.args, True)
-        print '{} is created!'.format(event.name)
-
-    def process_IN_DELETE(self, event):
-        if os.path.splitext(event.name)[-1] == '.html':
-            pass
-        else:
-            _create_index_files(self.args, True)
-            print '{} is deleted!'.format(event.name)
-
-
 if __name__ == '__main__':
     # Generate indices and serve from the current directory downwards when run
     # as the entry point
     args = parse_args()
-
 
     args_dict = {}
     args_dict[0] = args.port
@@ -543,9 +518,3 @@ if __name__ == '__main__':
     args_dict[2] = args.dir
     args_dict[3] = os.getcwd()
     serve_dir(args_dict)
-
-
-
-
-
-

@@ -116,8 +116,6 @@ def _create_index_file(
         '<html>',
         '    <head>',
         '        <title>imageMe</title>',
-        '        <script src="//code.jquery.com/jquery-3.3.1.min.js"></script>',
-        '        <script src="//172.25.52.112:8998/layer.js"></script>',
         '        <style>',
         '            html, body {margin: 0;padding: 0;}',
         '            .header {text-align: right;}',
@@ -126,22 +124,31 @@ def _create_index_file(
         '                padding-left: 4em;',
         '                padding-right: 4em;',
         '            }',
-        '            .image {max-width: 100%; border-radius: 0.3em;}',
+        '            .image {max-width: 100%; border-radius: 0.3em;cursor: pointer;}',
+        '            .image:hover {opacity: 0.8;}',
         '            td {width: ' + str(100.0 / images_per_row) + '%;}',
+        '            .popup {display: none; position: fixed;z-index: 1;padding-top: 100px;',
+        '                    left: 0;top: 0;width: 100%;height: 100%;overflow: auto;text-align: center;',
+        '                    background-color: rgb(0,0,0);background-color: rgba(0,0,0,0.8);}',
+        '            .popup-content {margin: auto;display: block;width: 50%;max-width: 500px;}',
+        '            .popup-content #caption {animation-name: zoom;animation-duration: 0.6s;',
+        '                            -webkit-animation-name: zoom;-webkit-animation-duration: 0.6s;}',
+        '            #caption {margin: auto;display: block;width: 80%;max-width: 700px;',
+        '                      text-align: center;color: #ccc;padding: 10px 0;height: 150px;}',
+        '            @-webkit-keyframes zoom {',
+        '               from {-webkit-transform:scale(0)}',
+        '               to {-webkit-transform:scale(1)}}',
+        '            @keyframes zoom {',
+        '               from {transform:scale(0)}',
+        '               to {transform:scale(1)}}',
+        '            @media only screen and (max-width: 700px){',
+        '               .popup-content {width: 100%;}}',
         '        </style>',
-        '        <script type="text/javascript">',
-        '            function pop_ups(pid){',
-        '                layer.photos({',
-        '                    photos: "#" + pid,',
-        '                    anim: -1',
-        '                });',
-        '            }',
-        '        </script>',
         '    </head>',
         '    <body>',
         '    <a href="#container" style="position:fixed; bottom:10%; right:2%"><img src="data:image/gif;base64,R0lGODlhIwAtANUAAKOmsNjZ3ri6wqaps/n5+ry+xdDS1sDCybq8xPX29+zt7/39/dTW2qSnseHi5cHEysXHzbK1vebn6t3e4snL0ba4wOjo69vc4LS3v77Ax/Pz9aqttcfJz+rr7airtO7v8aeqs87Q1fP09a2wua6xuu3u8K+yu6Wosv7+/u/w8rG0vOfo6ubn6c/R1cPGzN/g47O2vvDx8vv7/LC0u+Tl6Ovs7s7Q1MzO1M7R1ePk56yvt6mstaqttquut////6yvuCH5BAAAAAAALAAAAAAjAC0AAAb/QJ9wSCwKCcakcmm5wX7QCIW1rBZjB6h2W1BYqzTTdgwlvb5JyYjM/jnQxISqzSal4EIKvf3Aa/Z0NXABdB90IXAQbR+MbQVwCGyNjWQRcAKAbSpwWZlkGHAPnmQIKFYyHKNsD0hKMhmqjq1GLrF0EKZFhLZ0DEUiJLx0I3dDqcJ0fUIia8h0Xj4MbD3U1dbXPW03Qphj1Tzg4eHf1mMRKAlk1OA77e7v7+DUYx8W6kUGMBbLEB4GQiUg7OAxT8uLC9567PDgo8WJEyVKqNBxgYCKFitmvAExMJsWBtK8LWx4ooKPBw97+AgRQgIACj4GeCC4JUTILQoZ4mjwqECD0hMNVtogIMHHBZk0tdzYhZMHwxYNTD5o0GCDDxs2FCCocAKpRygGHKjjsYMkRAUzTlQ00RJAV45JoQQoMbasgQEDBKwQomEqjhVdPXT8+oPFAjE4e5D14AGEYxB4Iw8AIZgg4RFIFCUk646xZ88DLY955COHunXiOLcbR1jLBSELuiXEJq/cJxlDaHi6BmhCkU7OtghY8OtJcCgmYiTpEOw4jSUOmgsb4btKDQzCVOz7kqBWrAci8PjoUMBTgaLih3xgUJ6MAAbQ0idJ8eEFIzxBAAA7"></a>',
         '    <div class="content", style="overflow:auto", id="container">',
-        '        <div style="position:relative; z-index:99999">',
+        '        <div style="position:relative;">',
         '        <h2 class="header">' + header_text + '</h2>',
         '        </div>'
     ]
@@ -179,11 +186,11 @@ def _create_index_file(
         im_id = '_'.join(im_id.split('.'))
         html += [
             '    <td>',
-            '    <a href="javascript:pop_ups(\'' + 'div_' + im_id + '\')" title="' + image_file  + '">',
-            '    <div id="div_' + im_id + '">',
-            '        <img id="' + image_file + '" class="image" src="' + img_src + '">',
+            # '    <a href="javascript:pop_ups(\'' + 'div_' + im_id + '\')" title="' + image_file  + '">',
+            '    <div id="div_' + im_id + '" onclick="javascript:popup(\'' + image_file + '\')">',
+            '        <img id="' + image_file + '" class="image" src="' + img_src + '" alt="' + image_file + '">',
             '    </div>',
-            '    </a>',
+            # '    </a>',
             '    </td>'
         ]
         if table_row_count == images_per_row:
@@ -191,8 +198,15 @@ def _create_index_file(
             html.append('</tr>')
         table_row_count += 1
     html += ['</tr>', '</table>']
+    html += ['   </div>']
     html += [
-        '    </div>',
+        '    <div id="popup" class="popup">',
+        '       <img class="popup-content" id="popupimg">',
+        '       <div id="caption"></div>',
+        '    </div>'
+    ]
+    html += create_script() 
+    html += [
         '    </body>',
         '</html>'
     ]
@@ -204,6 +218,33 @@ def _create_index_file(
     index_file.close()
     # Return the path for cleaning up later
     return index_file_path
+
+
+def create_script():
+    script = []
+    script += _create_script_popup()
+    return script
+
+
+def _create_script_popup():
+    script = [
+        '    <script type="text/javascript">',
+        '       function popup(im_id){',
+        '           var popup = document.getElementById("popup");',
+        '           var img = document.getElementById(im_id);',
+        '           var popupimg = document.getElementById("popupimg");',
+        '           var captionText = document.getElementById("caption");',
+        '           popup.style.display = "block";',
+        '           popupimg.src = img.src;',
+        '           captionText.innerHTML = img.alt;',
+        '           var span = document.getElementsByClassName("close")[0];',
+        '           popup.onclick = function() {',
+        '               popup.style.display = "none";',
+        '           }}',
+        '    </script>'
+    ]
+    return script
+
 
 def _create_index_files(args, force_no_processing=False):
     """

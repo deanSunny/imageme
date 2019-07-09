@@ -11,15 +11,22 @@ what's called.
 """
 
 # Dependencies
-import base64, io, os, re, sys, threading
-try:
+import base64
+import io
+import os
+import re
+import sys
+import threading
+
+py_version = sys.version_info[0]
+
+if py_version == 2:
     import SimpleHTTPServer
     import SocketServer
     from BaseHTTPServer import HTTPServer
-except ModuleNotFoundError:
-    import http.server as SimpleHTTPServer
+else:
     import socketserver as SocketServer
-    from http.server import HTTPServer
+    from http.server import HTTPServer, CGIHTTPRequestHandler
 
 # Attempt to import PIL - if it doesn't exist we won't be able to make use of
 # some performance enhancing goodness, but imageMe will still work fine
@@ -534,7 +541,10 @@ def _run_server(args):
         # ('', port),
         # SimpleHTTPServer.SimpleHTTPRequestHandler
     # )
-    server = ThreadingSimpleServer(('', port), SimpleHTTPServer.SimpleHTTPRequestHandler)
+    if py_version == 2:
+        server = ThreadingSimpleServer(('', port), SimpleHTTPServer.SimpleHTTPRequestHandler)
+    else:
+        server = ThreadingSimpleServer(('', port), CGIHTTPRequestHandler)
     # Print out before actually running the server (cheeky / optimistic, however
     # you want to look at it)
     print('Your images are at http://127.0.0.1:%d/%s' % (
@@ -584,6 +594,8 @@ def serve_dir(args):
     # the image directories
     os.chdir(started_path)
     _clean_up(created_files)
+
+
 def main():
     # Generate indices and serve from the current directory downwards when run
     # as the entry point

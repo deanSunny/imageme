@@ -11,7 +11,16 @@ what's called.
 """
 
 # Dependencies
-import base64, io, os, re, sys, threading, SimpleHTTPServer, SocketServer
+import base64, io, os, re, sys, threading
+try:
+    import SimpleHTTPServer
+    import SocketServer
+    from BaseHTTPServer import HTTPServer
+except ModuleNotFoundError:
+    import http.server as SimpleHTTPServer
+    import socketserver as SocketServer
+    from http.server import HTTPServer
+
 # Attempt to import PIL - if it doesn't exist we won't be able to make use of
 # some performance enhancing goodness, but imageMe will still work fine
 import argparse
@@ -28,7 +37,6 @@ except ImportError:
         'performance you could out of imageMe. Install Pillow (' +\
         'https://github.com/python-pillow/Pillow) to enable support.'
     )
-
 def parse_args():
     parser = argparse.ArgumentParser(description='ImageMe~')
     parser.add_argument('-p', dest='port', default=8000, type=int,
@@ -45,7 +53,7 @@ def parse_args():
 ## Filename of the generated index files
 INDEX_FILE_NAME = 'index.html'
 ## Regex for matching only image files
-IMAGE_FILE_REGEX = '^.+\.(png|jpg|jpeg|tif|tiff|gif|bmp)$'
+IMAGE_FILE_REGEX = '^.+\.(png|jpg|jpeg|tif|tiff|gif|bmp|JPG|JPEG|PNG|TIF|TIFF|GIF|BMP)$'
 ## Images per row of the gallery tables
 # IMAGES_PER_ROW = 5
 ## Resampling mode to use when thumbnailing
@@ -66,6 +74,11 @@ class BackgroundIndexFileGenerator:
 
     def run(self):
         self.thread.start()
+
+
+class ThreadingSimpleServer(SocketServer.ThreadingMixIn, HTTPServer):
+    pass
+
 
 def _clean_up(paths):
     """
@@ -116,6 +129,7 @@ def _create_index_file(
         '<html>',
         '    <head>',
         '        <title>imageMe</title>',
+        '        <meta charset="UTF-8">',
         '        <style>',
         '            html, body {margin: 0;padding: 0;}',
         '            .header {text-align: right;}',
@@ -189,6 +203,11 @@ def _create_index_file(
             # '    <a href="javascript:pop_ups(\'' + 'div_' + im_id + '\')" title="' + image_file  + '">',
             '    <div id="div_' + im_id + '" onclick="javascript:popup(\'' + image_file + '\')">',
             '        <img id="' + image_file + '" class="image" src="' + img_src + '" alt="' + image_file + '">',
+            '    </div>',
+            '    <div>',
+            '        <a href="'+ link_target+'">',
+            '        <input type="button" value="Original Image", stype="width: 100%" />',
+            '        </a>',
             '    </div>',
             # '    </a>',
             '    </td>'
@@ -265,7 +284,7 @@ def _create_index_files(args, force_no_processing=False):
     root_dir = args[2]
     if not os.path.isabs(root_dir):
         root_dir = os.path.join(args[3], root_dir)
-    images_per_row = args[1]
+    images_per_row = abs(args[1])
     # Walk the root dir downwards, creating index files as we go
     for here, dirs, files in os.walk(root_dir):
         print('Processing %s' % here)
@@ -511,10 +530,11 @@ def _run_server(args):
     # last run can block a subsequent run
     SocketServer.TCPServer.allow_reuse_address = True
     # Create the server instance
-    server = SocketServer.TCPServer(
-        ('', port),
-        SimpleHTTPServer.SimpleHTTPRequestHandler
-    )
+    # server = SocketServer.TCPServer(
+        # ('', port),
+        # SimpleHTTPServer.SimpleHTTPRequestHandler
+    # )
+    server = ThreadingSimpleServer(('', port), SimpleHTTPServer.SimpleHTTPRequestHandler)
     # Print out before actually running the server (cheeky / optimistic, however
     # you want to look at it)
     print('Your images are at http://127.0.0.1:%d/%s' % (
@@ -564,8 +584,7 @@ def serve_dir(args):
     # the image directories
     os.chdir(started_path)
     _clean_up(created_files)
-
-if __name__ == '__main__':
+def main():
     # Generate indices and serve from the current directory downwards when run
     # as the entry point
     args = parse_args()
@@ -576,3 +595,7 @@ if __name__ == '__main__':
     args_dict[2] = args.dir
     args_dict[3] = os.getcwd()
     serve_dir(args_dict)
+
+
+if __name__ == '__main__':
+    main()

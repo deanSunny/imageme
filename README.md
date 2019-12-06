@@ -1,5 +1,3 @@
-# [imageMe](http://www.imageme.xyz/)
-
 imageMe is a super simple image gallery server.
 
 Think `python -m SimpleHTTPServer` for pictures.
@@ -19,7 +17,7 @@ Get hold of a copy of `imageme.py`. For _really_ easy use put it in your `PATH`.
 You could clone this repo:
 
 ```bash
-> git clone https://github.com/deanSunny/imageme.git
+> git clone git@git.tuputech.com:DiHuang/ImageMe.git 
 ```
 
 
@@ -31,26 +29,37 @@ Run `imageme.py` from the root directory to serve from:
 > cd /path/to/my/pics
 > imageme.py
 Processing .
-Creating index file ./imageme.html
+Creating index file ./index.html
 Processing ./photos
-Creating index file ./photos/imageme.html
+Creating index file ./photos/index.html
 Processing ./photos/holiday
-Creating index file ./photos/holiday/imageme.html
+Creating index file ./photos/holiday/index.html
 Processing ./photos/family
-Creating index file ./photos/family/imageme.html
+Creating index file ./photos/family/index.html
 Processing ./super_secret_stay_out
-Creating index file ./super_secret_stay_out/imageme.html
-Your images are at http://127.0.0.1:8000/imageme.html
+Creating index file ./super_secret_stay_out/index.html
+Your images are at http://127.0.0.1:8000/index.html
 ```
 
 You can specify a port, just like you can with `SimpleHTTPServer`:
 
 ```bash
-Port = 
-Num = 
-Dir = 
+Port = 8008 (default: 8000)
+Num = 5 (default: 3)
+Dir = /path/to/image dir (default: ./)
 >$ python imageme.py -p Port -n Num -d Dir
 
+```
+
+---
+##### New feature
+---
+[Pip config](https://git.tuputech.com/FRG/hz_docs/blob/master/dev_env/hz_pypi_config.md)
+
+```pip install imageme --user```
+
+```bash
+>$ imageme -p Port -n Num -d Dir
 ```
 
 ## Browse and Enjoy

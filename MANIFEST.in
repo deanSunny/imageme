@@ -1,0 +1,7 @@
+# Include the license file
+include LICENSE.txt
+include README.md
+# Include the data files
+recursive-include imageme/templates *
+recursive-include imageme/resources *
+    
